@@ -4,6 +4,8 @@ import (
 	"log/slog"
 	"os"
 	"urlshort/internal/config"
+	"urlshort/internal/lib/logger/sl"
+	"urlshort/internal/storage/sqllite"
 )
 
 const (
@@ -25,6 +27,11 @@ func main() {
 	log.Debug("debug messages are enabled")
 
 	// TODO: init storage: sqlite
+	storage, err := sqllite.New(cfg.StoragePath)
+	if err != nil {
+		log.Error("failed to initialize storage", sl.Err(err))
+		os.Exit(1)
+	}
 
 	// TODO: init router: chi совместим с net/http, "chi render"
 
