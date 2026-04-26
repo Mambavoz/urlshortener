@@ -4,8 +4,12 @@ import (
 	"log/slog"
 	"os"
 	"urlshort/internal/config"
+	"urlshort/internal/http-server/middleware/logger"
 	"urlshort/internal/lib/logger/sl"
 	"urlshort/internal/storage/sqllite"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 const (
@@ -34,6 +38,13 @@ func main() {
 	}
 
 	// TODO: init router: chi совместим с net/http, "chi render"
+	router := chi.NewRouter()
+
+	router.Use(middleware.RequestID)
+	router.Use(middleware.Logger)
+	router.Use(logger.New(log))
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.URLFormat)
 
 	// TODO: run server
 }
