@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"urlshort/internal/config"
+	"urlshort/internal/http-server/handlers/redirect"
 	"urlshort/internal/http-server/handlers/url/save"
 	"urlshort/internal/http-server/middleware/logger"
 	"urlshort/internal/lib/logger/hanlders/slogpretty"
@@ -22,19 +23,14 @@ const (
 )
 
 func main() {
-	// TODO: init config: cleanenv
 	cfg := config.MustLoad()
 
-	// TODO: init logger: log/slog
 	log := setupLogger(cfg.Env)
-
-	// или log = log.With(slog.String("env", cfg.Env)) и дальше юзать log.Info, log.Debug, log.Error
 
 	log.Info("starting url-shortener", slog.String("env", cfg.Env))
 	log.Debug("debug messages are enabled")
 	log.Error("error messages are enabled")
 
-	// TODO: init storage: sqlite
 	storage, err := sqllite.New(cfg.StoragePath)
 	if err != nil {
 		log.Error("failed to initialize storage", sl.Err(err))
@@ -43,7 +39,8 @@ func main() {
 
 	_ = storage
 
-	// TODO: init router: chi совместим с net/http, "chi render"
+	// TODO: implement authorisation
+
 	router := chi.NewRouter()
 
 	router.Use(middleware.RequestID)
@@ -52,8 +49,10 @@ func main() {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 
-	// TODO: run server
 	router.Post("/url", save.New(log, storage))
+	router.Get("/{alias}", redirect.New(log, storage))
+	// TODO: implement deleteHandler
+	//router.Delete("/{alias}", delete.New(log, storage))
 
 	log.Info("starting server", slog.String("address", cfg.Address))
 
@@ -63,6 +62,11 @@ func main() {
 		ReadTimeout:  cfg.HTTPServer.Timeout,
 		WriteTimeout: cfg.HTTPServer.Timeout,
 		IdleTimeout:  cfg.HTTPServer.IdleTimeout,
+	}
+
+	if err := server.ListenAndServe(); err != nil {
+		log.Error("failed to start server :(")
+		os.Exit(1)
 	}
 }
 
