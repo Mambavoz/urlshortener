@@ -58,8 +58,6 @@ func (s *Storage) SaveURL(urlToSave string, alias string) (int64, error) {
 
 	res, err := stmt.Exec(urlToSave, alias)
 	if err != nil {
-		// Проверка constraint'а на добавление url с alias, который уже сохранён
-		// TODO: refactor this
 		if sqliteErr, ok := err.(sqlite3.Error); ok && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
 			return 0, fmt.Errorf("%s: %w", op, storage.ErrUrlExists)
 		}
@@ -75,6 +73,10 @@ func (s *Storage) SaveURL(urlToSave string, alias string) (int64, error) {
 	return id, nil
 }
 
+/*
+GetURL получает URL по псевдониму из базы данных.
+Возвращает URL и ошибку. Если URL не найден, возвращает ошибку storage.ErrUrlNotFound.
+*/
 func (s *Storage) GetURL(alias string) (string, error) {
 	const op = "storage.sqlite.GetURL"
 
@@ -97,6 +99,10 @@ func (s *Storage) GetURL(alias string) (string, error) {
 	return res, err
 }
 
+/*
+DeleteURL удаляет URL по псевдониму из базы данных.
+Возвращает ошибку. Если URL не найден, возвращает ошибку storage.ErrUrlNotFound.
+*/
 func (s *Storage) DeleteURL(alias string) error {
 	const op = "storage.sqlite.DeleteURL"
 
