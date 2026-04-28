@@ -6,6 +6,7 @@ import (
 	"os"
 	"urlshort/internal/config"
 	"urlshort/internal/http-server/handlers/redirect"
+	"urlshort/internal/http-server/handlers/url/delete"
 	"urlshort/internal/http-server/handlers/url/save"
 	"urlshort/internal/http-server/middleware/logger"
 	"urlshort/internal/lib/logger/hanlders/slogpretty"
@@ -51,8 +52,7 @@ func main() {
 
 	router.Post("/url", save.New(log, storage))
 	router.Get("/{alias}", redirect.New(log, storage))
-	// TODO: implement deleteHandler
-	//router.Delete("/{alias}", delete.New(log, storage))
+	router.Delete("/{alias}", delete.New(log, storage))
 
 	log.Info("starting server", slog.String("address", cfg.Address))
 
